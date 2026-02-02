@@ -1,0 +1,16 @@
+# Controlador de Dominio con Samba en Ubuntu
+
+Esta documentación explica cómo promover un servidor Ubuntu
+a controlador de dominio usando Samba y kerberos.
+
+## Requisitos
+
+- Ubuntu Server
+- Acceso sudo
+- IP estática
+
+## Instalación de Samba
+
+```bash
+sudo apt update
+sudo apt install samba -y
