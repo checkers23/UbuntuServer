@@ -1,0 +1,188 @@
+################################################################################
+# Netplan Network Configuration - LAB07 Domain Controller (ls07)
+################################################################################
+#
+# File Location:    /etc/netplan/50-cloud-init.yaml
+# Server:           ls07.lab07.lan
+# Operating System: Ubuntu Server 24.04 LTS
+# Last Modified:    Febrero 2026
+#
+# Network Summary:
+#   - External Network: 172.30.20.54/25 (Bridge/Internet)
+#   - Internal Network: 192.168.100.1/25 (Active Directory Domain)
+#
+# To apply configuration:
+#   sudo netplan apply
+#
+# To verify configuration:
+#   ip a
+#   ip route
+#   ping -c 2 172.30.20.1
+#   ping -c 2 10.239.3.7
+#
+################################################################################
+
+network:
+  version: 2
+  ethernets:
+  
+    # =========================================================================
+    # EXTERNAL/BRIDGE INTERFACE
+    # =========================================================================
+    # Interface:     enp0s3 (⚠️ CHANGE TO YOUR ACTUAL INTERFACE NAME)
+    # Purpose:       External connectivity and internet access
+    # Network:       172.30.20.0/25
+    # IP Range:      172.30.20.1 - 172.30.20.126
+    # Gateway:       172.30.20.1
+    # =========================================================================
+    
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 172.30.20.54/25
+      routes:
+        - to: default
+          via: 172.30.20.1
+      nameservers:
+        addresses: [127.0.0.1, 10.239.3.7]
+        search: [lab07.lan]
+    
+    # =========================================================================
+    # INTERNAL NETWORK INTERFACE
+    # =========================================================================
+    # Interface:     enp0s8 (⚠️ CHANGE TO YOUR ACTUAL INTERFACE NAME)
+    # Purpose:       Active Directory domain network
+    # Network:       192.168.100.0/25
+    # IP Range:      192.168.100.1 - 192.168.100.126
+    # This network:  Domain clients connect here
+    # =========================================================================
+    
+    enp0s8:
+      dhcp4: no
+      addresses:
+        - 192.168.100.1/25
+      nameservers:
+        addresses: [127.0.0.1]
+        search: [lab07.lan]
+
+################################################################################
+# IMPORTANT NOTES
+################################################################################
+#
+# 1. INTERFACE NAMES
+#    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#    Replace 'enp0s3' and 'enp0s8' with your actual interface names.
+#    
+#    To find your interfaces:
+#      ip a
+#    
+#    Common names:
+#      - enp0s3, enp0s8       (VirtualBox)
+#      - eth0, eth1           (Physical/Generic)
+#      - ens33, ens34         (VMware)
+#      - eno1, eno2           (Physical Dell/HP)
+#
+# 2. NETWORK BREAKDOWN
+#    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#    External Network (172.30.20.0/25):
+#      Subnet Mask:     255.255.255.128
+#      Network:         172.30.20.0
+#      First IP:        172.30.20.1 (Gateway)
+#      Last IP:         172.30.20.126
+#      Broadcast:       172.30.20.127
+#      Usable IPs:      126 addresses
+#    
+#    Internal Network (192.168.100.0/25):
+#      Subnet Mask:     255.255.255.128
+#      Network:         192.168.100.0
+#      First IP:        192.168.100.1 (DC - This server)
+#      Last IP:         192.168.100.126
+#      Broadcast:       192.168.100.127
+#      Usable IPs:      126 addresses
+#      Purpose:         Active Directory domain network
+#
+# 3. DNS CONFIGURATION
+#    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#    Primary DNS:     127.0.0.1 (DC itself - Samba DNS)
+#    Secondary DNS:   10.239.3.7 (External forwarder)
+#    Search Domain:   lab07.lan
+#    
+#    Why 127.0.0.1?
+#      The DC must use itself for DNS to resolve Active Directory
+#      records like _ldap._tcp.lab07.lan
+#
+# 4. FOR SECOND DC (LAB08 - if implementing)
+#    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#    External IP:     172.30.20.XX/25 (assign available IP)
+#    Internal IP:     192.168.100.3/25
+#    DNS Primary:     127.0.0.1
+#    DNS Secondary:   192.168.100.1 (points to LAB07)
+#
+################################################################################
+
+################################################################################
+# CLIENT CONFIGURATION EXAMPLES
+################################################################################
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ Ubuntu Desktop Client (lc07)                                             │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# network:
+#   version: 2
+#   ethernets:
+#     enp0s3:  # External interface
+#       dhcp4: no
+#       addresses:
+#         - 172.30.20.53/25
+#       routes:
+#         - to: default
+#           via: 172.30.20.1
+#       nameservers:
+#         addresses: [192.168.100.1]  # Points to DC
+#         search: [lab07.lan]
+#     
+#     enp0s8:  # Internal interface
+#       dhcp4: no
+#       addresses:
+#         - 192.168.100.2/25
+#       nameservers:
+#         addresses: [192.168.100.1]  # Points to DC
+#         search: [lab07.lan]
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ Windows Client                                                            │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# Static IP Configuration:
+#   IP Address:      192.168.100.X/25 (example: 192.168.100.10)
+#   Subnet Mask:     255.255.255.128
+#   Default Gateway: 172.30.20.1 (or leave empty)
+#   DNS Server:      192.168.100.1
+#   DNS Suffix:      lab07.lan
+
+################################################################################
+# TROUBLESHOOTING
+################################################################################
+#
+# Configuration not applying?
+#   sudo netplan --debug apply
+#
+# Check current configuration:
+#   ip addr show
+#   ip route show
+#   cat /etc/resolv.conf
+#
+# Test connectivity:
+#   ping -c 4 172.30.20.1      # Gateway
+#   ping -c 4 10.239.3.7       # External DNS
+#   ping -c 4 8.8.8.8          # Internet
+#
+# Test DNS:
+#   nslookup ls07.lab07.lan
+#   host -t A ls07.lab07.lan
+#   host -t SRV _ldap._tcp.lab07.lan
+#
+################################################################################
+# End of Configuration
+################################################################################
