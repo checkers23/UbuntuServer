@@ -940,6 +940,24 @@ sudo samba-tool user delete testgpo
 ```bash
 sudo samba-tool user setexpiry Administrator --noexpiry
 ```
+4.10: Gestión de GPOs
+Samba 4 crea automáticamente dos GPOs predeterminadas durante el aprovisionamiento del dominio.
+Listar todas las GPOs e inspeccionar la estructura SYSVOL:
+bash# Listar todas las GPOs del dominio
+sudo samba-tool gpo listall
+
+# Ver el directorio SYSVOL (donde se almacenan las GPOs en disco)
+sudo ls -la /var/lib/samba/sysvol/lab07.lan/Policies/
+
+# Ver a qué contenedor está vinculada cada GPO
+sudo samba-tool gpo listcontainers "{31B2F340-016D-11D2-945F-00C04FB984F9}"
+sudo samba-tool gpo listcontainers "{6AC1786C-016F-11D2-945F-00C04FB984F9}"
+GPOs predeterminadas:
+
+Default Domain Policy {31B2F340...} → vinculada a DC=lab07,DC=lan — controla la política de contraseñas
+Default Domain Controllers Policy {6AC1786C...} → vinculada a OU=Domain Controllers
+
+Orden de procesamiento de GPOs (LSDOU): Local → Sitio → Dominio → OU — la última aplicada tiene prioridad.
 
 ### ✅ Sprint 2 Completado
 
